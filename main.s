@@ -28,20 +28,26 @@ __vectors:
         .globl  Reset_Handler
         .thumb_func
 Reset_Handler:
-        @@@     Set PA16 to OUTPUT
+        @@@     Set pins A0-3, D13 to output
+        @@@     2 A0 ; 4 A3 ; 5 A1 ; 6 A2 ; 16 D13
+        @@@     b01110100 + 1 << 16
         LDR     R0, =PORTA
-        MOVS    R2, #1
-        LSLS    R2, #16
+        MOV     R2, #1
+        LSL     R2, #16
+        ADD     R2, R2, #0x74
         STR     R2, [R0, DIRSET]
 
-toggle:
-        STR     R2, [R0, OUTTGL]
-        MOVS    R3, #1
-        LSLS    R3, #20
+halt:
+        B       halt
 
-delay:
-        SUBS    R3, R3, #1
-        BNE     delay
-        B       toggle
+@ toggle:
+@         STR     R2, [R0, OUTTGL]
+@         MOVS    R3, #1
+@         LSLS    R3, #20
+
+@ delay:
+@         SUBS    R3, R3, #1
+@         BNE     delay
+@         B       toggle
 
 .end
