@@ -1,7 +1,8 @@
-# Rust
-/build
-/target
-**/*.rs.bk
+# artifacts
+*.o
+*.elf
+*.bin
+*.uf2
 
 # macOS
 .DS_Store
