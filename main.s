@@ -25,7 +25,7 @@ __vectors:
         .equ    WRCONF, 0x28
         .equ    EVCTRL, 0x2c
 
-        .equ    INTERVAL, 0x16
+        .equ    INTERVAL, 0x17
 
         .equ    VSYNC, 0x00010000 @ D13
         .equ    HSYNC, 0x00000004 @ A0
@@ -38,33 +38,29 @@ __vectors:
         .thumb_func
 Reset_Handler:
         @@@     Set pins A0-3, D13 to output
-        LDR     R0, =PORTA
+        LDR     R6, =PORTA
         LDR     R2, =VGA_A
-        STR     R2, [R0, DIRSET]
+        STR     R2, [R6, DIRSET]
 
-        LDR     R2, =VSYNC
-        STR     R2, [R0, OUTSET]
+        LDR     R7, =VSYNC
+        LDR     R8, =HSYNC
+        LDR     R9, =VGA_R
+        STR     R7, [R6, OUTSET]
 loop:
-        LDR     R2, =VSYNC
-        LDR     R3, =HSYNC
-        ADD     R2, R2, R3
-        STR     R2, [R0, OUTTGL]
+        EOR     R0, R7, R8              @ R0 = VSYNC | HSYNC
+        STR     R0, [R6, OUTTGL]        @ Toggle PORTA from VSYNC to HSYNC
         MOV     R3, #1
         LSL     R3, INTERVAL
         BL      delay
 
-        LDR     R2, =HSYNC
-        LDR     R3, =VGA_R
-        ADD     R2, R2, R3
-        STR     R2, [R0, OUTTGL]
+        EOR     R0, R8, R9              @ R0 = HSYNC | VGA_R
+        STR     R0, [R6, OUTTGL]        @ Toggle PORTA from HSYNC to VGA_R
         MOV     R3, #1
         LSL     R3, INTERVAL
         BL      delay
 
-        LDR     R2, =VGA_R
-        LDR     R3, =VSYNC
-        ADD     R2, R2, R3
-        STR     R2, [R0, OUTTGL]
+        EOR     R0, R9, R7
+        STR     R0, [R6, OUTTGL]
         MOV     R3, #1
         LSL     R3, INTERVAL
         BL      delay
