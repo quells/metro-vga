@@ -2,7 +2,7 @@ MEMORY
 {
         BOOT(r)   : ORIGIN = 0x00000000, LENGTH =  16K
         FLASH(rx) : ORIGIN = 0x00004000, LENGTH = 512K - 16K
-        SRAM(rwx) : ORIGIN = 0x00008000, LENGTH = 192K
+        SRAM(rwx) : ORIGIN = 0x20000000, LENGTH = 192K
 }
 
 ENTRY(Reset_Handler);
