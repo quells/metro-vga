@@ -68,147 +68,101 @@ Reset_Handler:
         STR     R8, [R9, OUTCLR]
 
         @@@     HSYNC and VSYNC normally high
-        @ LDR     R0, =PORCH
-        @ STR     R0, [R9, OUTSET]
+        LDR     R0, =PORCH
+        STR     R0, [R9, OUTSET]
 
         @@@     600 lines
-        @ MOV     R7, #150
-        @ LSL     R7, R7, #2
+        MOV     R7, #150
+        LSL     R7, R7, #2
 
 loop:
-        BL      blink
-        MOV     R0, #1
-        LSL     R0, #24
+        @@@     Visible pixels for 20us = 2400 cycles
+        MOV     R0, #150
+        LSL     R0, R0, #3
         BL      delay
+        BL      hblank
+        @@@     Check line number
+        SUBS    R7, R7, #1
+        BNE     loop
+
+vblank:
+        @@@     V front porch for 1 line
+        LDR     R1, =PORCH
+        LDR     R2, =VSYNC
+        BL      vblank_line
+        @@@     V sync pulse for 4 lines
+        LDR     R1, =HSYNC
+        MOV     R2, #0
+        BL      vblank_line
+        BL      vblank_line
+        BL      vblank_line
+        BL      vblank_line
+        @@@     V back porch for 23 lines
+        LDR     R1, =PORCH
+        LDR     R2, =VSYNC
+        MOV     R3, 23
+vblank_back_porch:
+        BL      vblank_line
+        SUBS    R3, R3, #1
+        BNE     vblank_back_porch
+        @@@     Reset line counter and start next frame
+        MOV     R7, #150
+        LSL     R7, R7, #2
         B       loop
-@         @@@     Visible pixels for 20us = 2400 cycles
-@         MOV     R0, #150
-@         LSL     R0, R0, #3
-@         BL      delay
-@         BL      hblank
-@         @@@     Check line number
-@         SUBS    R7, R7, #1
-@         BNE     loop
 
-@         STR     R8, [R9, OUTCLR]
-halt:
-        B       halt
-
-blink:
+vblank_line:
         PUSH    {LR}
-        @@@     Turn on LED
-        LDR     R9, =PORTB
-        LDR     R8, =HSYNC
-        STR     R8, [R9, OUTSET]
-        @@@     Wait
-        MOV     R0, #1
-        LSL     R0, #18
-        BL      delay
-        @@@     Turn off LED
-        LDR     R9, =PORTB
-        LDR     R8, =HSYNC
+        @@@     Set R1 to the porch pattern
+        @@@     Set R2 to the sync pulse pattern
+        @@@     Visible pixels plus H front porch for 2520 cycles
         STR     R8, [R9, OUTCLR]
+        STR     R1, [R9, OUTSET]
+        MOV     R0, #158
+        LSL     R0, R0, #3
+        SUBS    R0, R0, #10
+        BL      delay
+        @@@     H sync pulse for 384 cycles
+        STR     R8, [R9, OUTCLR]
+        STR     R2, [R9, OUTSET]
+        MOV     R0, #191
+        BL      delay
+        @@@     H back porch for 264 cycles
+        STR     R8, [R9, OUTCLR]
+        STR     R1, [R9, OUTSET]
+        MOV     R0, #131
+        BL      delay
+        @@@     return
+        POP     {PC}
+
+hblank:
+        PUSH    {LR}
+        @@@     H front porch for 1us = 120 cycles
+        LDR     R0, =PORCH
+        STR     R8, [R9, OUTCLR]
+        STR     R0, [R9, OUTSET]
+        MOV     R0, #59
+        BL      delay
+        @@@     H sync pulse for 3.2us = 384 cycles
+        LDR     R0, =HSYNCP
+        STR     R8, [R9, OUTCLR]
+        STR     R0, [R9, OUTSET]
+        MOV     R0, #191
+        BL      delay
+        @@@     H back porch for 2.2us = 264 cycles
+        LDR     R0, =PORCH
+        STR     R8, [R9, OUTCLR]
+        STR     R0, [R9, OUTSET]
+        MOV     R0, #131
+        BL      delay
+        @@@     return
         POP     {PC}
 
 delay:
+        @@@ uncomment to slow down
+        @ LSL     R0, #14
+delay_loop:
         SUBS    R0, #1
-        BNE     delay
+        BNE     delay_loop
         BX      LR
-
-@ blink:
-@         PUSH    {FP, LR}
-@         ADD     FP, SP, #0
-
-@         LDR     R1, =HSYNC
-@         STR     R1, [R9, OUTSET]
-@         MOV     R0, #200
-@         BL      delay
-@         STR     R1, [R9, OUTCLR]
-
-@         MOV     SP, FP
-@         POP     {FP, PC}
-
-@ vblank:
-@         @@@     V front porch for 1 line
-@         LDR     R1, =VSP_HP
-@         BL      vblank_line
-@         @@@     V sync pulse for 4 lines
-@         LDR     R1, =VSP_HS
-@         BL      vblank_line
-@         BL      vblank_line
-@         BL      vblank_line
-@         BL      vblank_line
-@         @@@     V back porch for 23 lines
-@         LDR     R1, =VSP_HP
-@ vblank_back_porch:
-@         MOV     R2, 23
-@         BL      vblank_line
-@         SUBS    R2, R2, #1
-@         BNE     vblank_back_porch
-@         @@@     Reset line counter and start next frame
-@         MOV     R7, #150
-@         LSL     R7, R7, #2
-@         B       loop
-
-@ vblank_line:
-@         @@@     Set R1 to the sync pulse pattern
-@         @@@     Visible pixels plus H front porch for 2520 cycles
-@         LDR     R0, =PORCH
-@         STR     R8, [R9, OUTCLR]
-@         STR     R0, [R9, OUTSET]
-@         MOV     R0, #158
-@         LSL     R0, R0, #3
-@         SUBS    R0, R0, #10
-@         BL      delay
-@         @@@     H sync pulse for 384 cycles
-@         STR     R8, [R9, OUTCLR]
-@         STR     R1, [R9, OUTSET]
-@         MOV     R0, #191
-@         BL      delay
-@         @@@     H back porch for 264 cycles
-@         LDR     R0, =PORCH
-@         STR     R8, [R9, OUTCLR]
-@         STR     R0, [R9, OUTSET]
-@         MOV     R0, #131
-@         BL      delay
-@         @@@     return
-@         MOV     PC, LR
-
-@ hblank:
-@         PUSH    {LR}
-@         @@@     H front porch for 1us = 120 cycles
-@         LDR     R0, =PORCH
-@         STR     R8, [R9, OUTCLR]
-@         STR     R0, [R9, OUTSET]
-@         MOV     R0, #59
-@         BL      delay
-@         @@@     H sync pulse for 3.2us = 384 cycles
-@         LDR     R0, =HSYNCP
-@         STR     R8, [R9, OUTCLR]
-@         STR     R0, [R9, OUTSET]
-@         MOV     R0, #191
-@         BL      delay
-@         @@@     H back porch for 2.2us = 264 cycles
-@         LDR     R0, =PORCH
-@         STR     R8, [R9, OUTCLR]
-@         STR     R0, [R9, OUTSET]
-@         MOV     R0, #131
-@         BL      delay
-@         @@@     return
-@         POP     {PC}
-
-@ delay:
-@         PUSH    {FP}
-@         ADD     FP, SP, #0
-
-@         LSL     R0, R0, #14
-@ delay_loop:
-@         @@@     2 cycles x R0 + a bit
-@         SUBS    R0, R0, #1
-@         BNE     delay_loop
-
-@         MOV     SP, FP
-@         POP     {FP}
-@         BX      LR
 
 .end
