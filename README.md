@@ -15,6 +15,11 @@
 
 Having cargo as a dependency is not great - more of a leftover from when this was a Rust project.
 
+```
+cd src
+make all install
+```
+
 ## Acknowledgements
 
 Based heavily on [this article](https://castlerock.se/2019/10/forth-for-cortex-m4-part-i-blinkenlights/) by Johan Liseborn.

@@ -1,6 +1,6 @@
 #!/bin/sh
 
 cd src
-make all
+make all dump
 mv *.elf ../build
 mv *.uf2 ../build
