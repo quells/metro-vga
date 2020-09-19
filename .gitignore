@@ -3,6 +3,7 @@
 *.elf
 *.bin
 *.uf2
+/build
 
 # macOS
 .DS_Store

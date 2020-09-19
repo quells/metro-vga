@@ -1,9 +1,19 @@
 # metro-vga
 
-## Dependencies
+## Build
 
-* apt install binutils-arm-none-eabi gcc-arm-none-eabi
-* cargo install uf2conv
+### Docker
+
+`make build` will build a Docker image and use it to compile the ELF and UF2 artifacts into the build directory (which will be created if needed).
+
+### Local
+
+*Dependencies*
+
+* `apt install binutils-arm-none-eabi gcc-arm-none-eabi`
+* `cargo install uf2conv`
+
+Having cargo as a dependency is not great - more of a leftover from when this was a Rust project.
 
 ## Acknowledgements
 
