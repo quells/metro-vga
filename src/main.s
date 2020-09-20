@@ -57,6 +57,8 @@ __vectors:
         .equ    VSP_HP, HSYNC     @ V sync pulse = HSYNC    (unless during H sync pulse)
         .equ    VSP_HS, 0         @ V sync pulse = 0               (during H sync pulse)
         @@@@    TODO: make variables for rgb colors using digital pins on PORTB
+        .equ    WHITE, 0x0003F300
+        .equ    BLACK, 0x00000300
 
         .globl  Reset_Handler
         .thumb_func
@@ -77,6 +79,9 @@ Reset_Handler:
 
 loop:
         @@@     Visible pixels for 20us
+        LDR     R0, =WHITE
+        STR     R8, [R9, OUTCLR]
+        STR     R0, [R9, OUTSET]
         MOV     R0, #135
         BL      delay
         BL      hblank
