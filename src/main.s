@@ -76,9 +76,8 @@ Reset_Handler:
         LSL     R7, R7, #2
 
 loop:
-        @@@     Visible pixels for 20us = 2400 cycles
-        MOV     R0, #150
-        LSL     R0, R0, #3
+        @@@     Visible pixels for 20us
+        MOV     R0, #135
         BL      delay
         BL      hblank
         @@@     Check line number
@@ -114,52 +113,48 @@ vblank_line:
         PUSH    {LR}
         @@@     Set R1 to the porch pattern
         @@@     Set R2 to the sync pulse pattern
-        @@@     Visible pixels plus H front porch for 2520 cycles
+        @@@     Visible pixels plus H front porch for 21us
         STR     R8, [R9, OUTCLR]
         STR     R1, [R9, OUTSET]
-        MOV     R0, #158
-        LSL     R0, R0, #3
-        SUBS    R0, R0, #10
+        MOV     R0, #142
         BL      delay
-        @@@     H sync pulse for 384 cycles
+        @@@     H sync pulse for 3.2us
         STR     R8, [R9, OUTCLR]
         STR     R2, [R9, OUTSET]
-        MOV     R0, #191
+        MOV     R0, #20
         BL      delay
-        @@@     H back porch for 264 cycles
+        @@@     H back porch for 2.2us
         STR     R8, [R9, OUTCLR]
         STR     R1, [R9, OUTSET]
-        MOV     R0, #131
+        MOV     R0, #13
         BL      delay
         @@@     return
         POP     {PC}
 
 hblank:
         PUSH    {LR}
-        @@@     H front porch for 1us = 120 cycles
+        @@@     H front porch for 1us
         LDR     R0, =PORCH
         STR     R8, [R9, OUTCLR]
         STR     R0, [R9, OUTSET]
-        MOV     R0, #59
+        MOV     R0, #4
         BL      delay
-        @@@     H sync pulse for 3.2us = 384 cycles
+        @@@     H sync pulse for 3.2us
         LDR     R0, =HSYNCP
         STR     R8, [R9, OUTCLR]
         STR     R0, [R9, OUTSET]
-        MOV     R0, #191
+        MOV     R0, #20
         BL      delay
-        @@@     H back porch for 2.2us = 264 cycles
+        @@@     H back porch for 2.2us
         LDR     R0, =PORCH
         STR     R8, [R9, OUTCLR]
         STR     R0, [R9, OUTSET]
-        MOV     R0, #131
+        MOV     R0, #13
         BL      delay
         @@@     return
         POP     {PC}
 
 delay:
-        @@@ uncomment to slow down
-        @ LSL     R0, #14
 delay_loop:
         SUBS    R0, #1
         BNE     delay_loop
