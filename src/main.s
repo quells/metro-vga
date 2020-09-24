@@ -81,8 +81,13 @@ loop:
         @@@     Visible pixels for 20us
         LDR     R1, =WHITE
         STR     R1, [R9, OUTSET]
-        MOV     R0, #315
-        BL      delay
+        MOV     R2, #120
+blink:
+        STR     R1, [R9, OUTTGL]
+        SUBS    R2, R2, #1
+        BNE     blink
+        @ MOV     R0, #315
+        @ BL      delay
         BL      hblank
         @@@     Check line number
         SUBS    R7, R7, #1
@@ -108,16 +113,16 @@ vblank_back_porch:
 vblank_line:
         PUSH    {LR}
         @@@     H front porch for 21us (only HSYNC | VSYNC high)
-        MOV     R0, #330
+        MOV     R0, #144
         BL      delay
         @@@     H sync pulse for 3.2us (only VSYNC high)
         LDR     R1, =HSYNC
         STR     R1, [R9, OUTCLR]
-        MOV     R0, #48
+        MOV     R0, #21
         BL      delay
         @@@     H back porch for 2.2us (only HSYNC | VSYNC high)
         STR     R1, [R9, OUTTGL]
-        MOV     R0, #29
+        MOV     R0, #13
         BL      delay
         @@@     return
         POP     {PC}
@@ -130,16 +135,16 @@ vsync_pulse:
         MOV     R3, #4
 vsync_pulse_loop:
         @@@     H front porch for 21us (only HSYNC high)
-        MOV     R0, #330
+        MOV     R0, #144
         BL      delay
         @@@     H sync pulse for 3.2us (all low)
         LDR     R2, =HSYNC
         STR     R2, [R9, OUTCLR]
-        MOV     R0, #48
+        MOV     R0, #21
         BL      delay
         @@@     H back porch for 2.2us (only HSYNC high)
         STR     R2, [R9, OUTTGL]
-        MOV     R0, #29
+        MOV     R0, #13
         BL      delay
         @@@     Loop 4 times
         SUBS    R3, R3, 1
@@ -155,16 +160,16 @@ hblank:
         @@@     H front porch for 1us (only HSYNC | VSYNC high)
         LDR     R0, =WHITE
         STR     R0, [R9, OUTCLR]
-        MOV     R0, #12
+        MOV     R0, #5
         BL      delay
         @@@     H sync pulse for 3.2us (only VSYNC high)
         LDR     R1, =HSYNC
         STR     R1, [R9, OUTCLR]
-        MOV     R0, #48
+        MOV     R0, #21
         BL      delay
         @@@     H back porch for 2.2us (only HSYNC | VSYNC high)
         STR     R1, [R9, OUTTGL]
-        MOV     R0, #29
+        MOV     R0, #13
         BL      delay
         @@@     return
         POP     {PC}
