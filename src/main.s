@@ -57,7 +57,7 @@ __vectors:
         .equ    VSP_HP, HSYNC     @ V sync pulse = HSYNC    (unless during H sync pulse)
         .equ    VSP_HS, 0         @ V sync pulse = 0               (during H sync pulse)
         @@@@    TODO: make variables for rgb colors using digital pins on PORTB
-        .equ    WHITE, 0x0003F300
+        .equ    WHITE, 0x0003F000
         .equ    BLACK, 0x00000300
 
         .globl  Reset_Handler
@@ -79,10 +79,9 @@ Reset_Handler:
 
 loop:
         @@@     Visible pixels for 20us
-        LDR     R0, =WHITE
-        STR     R8, [R9, OUTCLR]
-        STR     R0, [R9, OUTSET]
-        MOV     R0, #135
+        LDR     R1, =WHITE
+        STR     R1, [R9, OUTSET]
+        MOV     R0, #315
         BL      delay
         BL      hblank
         @@@     Check line number
@@ -90,24 +89,16 @@ loop:
         BNE     loop
 
 vblank:
+        @@@     RGB is off for entire vblank - assume we fell through from loop
         @@@     V front porch for 1 line
-        LDR     R1, =PORCH
-        LDR     R2, =VSYNC
         BL      vblank_line
         @@@     V sync pulse for 4 lines
-        LDR     R1, =HSYNC
-        MOV     R2, #0
-        BL      vblank_line
-        BL      vblank_line
-        BL      vblank_line
-        BL      vblank_line
+        BL      vsync_pulse
         @@@     V back porch for 23 lines
-        LDR     R1, =PORCH
-        LDR     R2, =VSYNC
-        MOV     R3, 23
+        MOV     R4, 23
 vblank_back_porch:
         BL      vblank_line
-        SUBS    R3, R3, #1
+        SUBS    R4, R4, #1
         BNE     vblank_back_porch
         @@@     Reset line counter and start next frame
         MOV     R7, #150
@@ -116,45 +107,64 @@ vblank_back_porch:
 
 vblank_line:
         PUSH    {LR}
-        @@@     Set R1 to the porch pattern
-        @@@     Set R2 to the sync pulse pattern
-        @@@     Visible pixels plus H front porch for 21us
-        STR     R8, [R9, OUTCLR]
+        @@@     H front porch for 21us (only HSYNC | VSYNC high)
+        MOV     R0, #330
+        BL      delay
+        @@@     H sync pulse for 3.2us (only VSYNC high)
+        LDR     R1, =HSYNC
+        STR     R1, [R9, OUTCLR]
+        MOV     R0, #48
+        BL      delay
+        @@@     H back porch for 2.2us (only HSYNC | VSYNC high)
+        STR     R1, [R9, OUTTGL]
+        MOV     R0, #29
+        BL      delay
+        @@@     return
+        POP     {PC}
+
+vsync_pulse:
+        PUSH    {LR}
+        @@@     VSYNC is low for entire sync pulse
+        LDR     R1, =VSYNC
+        STR     R1, [R9, OUTCLR]
+        MOV     R3, #4
+vsync_pulse_loop:
+        @@@     H front porch for 21us (only HSYNC high)
+        MOV     R0, #330
+        BL      delay
+        @@@     H sync pulse for 3.2us (all low)
+        LDR     R2, =HSYNC
+        STR     R2, [R9, OUTCLR]
+        MOV     R0, #48
+        BL      delay
+        @@@     H back porch for 2.2us (only HSYNC high)
+        STR     R2, [R9, OUTTGL]
+        MOV     R0, #29
+        BL      delay
+        @@@     Loop 4 times
+        SUBS    R3, R3, 1
+        BNE     vsync_pulse_loop
+        @@@     Reset VSYNC to high
+        LDR     R1, =VSYNC
         STR     R1, [R9, OUTSET]
-        MOV     R0, #142
-        BL      delay
-        @@@     H sync pulse for 3.2us
-        STR     R8, [R9, OUTCLR]
-        STR     R2, [R9, OUTSET]
-        MOV     R0, #20
-        BL      delay
-        @@@     H back porch for 2.2us
-        STR     R8, [R9, OUTCLR]
-        STR     R1, [R9, OUTSET]
-        MOV     R0, #13
-        BL      delay
         @@@     return
         POP     {PC}
 
 hblank:
         PUSH    {LR}
-        @@@     H front porch for 1us
-        LDR     R0, =PORCH
-        STR     R8, [R9, OUTCLR]
-        STR     R0, [R9, OUTSET]
-        MOV     R0, #4
+        @@@     H front porch for 1us (only HSYNC | VSYNC high)
+        LDR     R0, =WHITE
+        STR     R0, [R9, OUTCLR]
+        MOV     R0, #12
         BL      delay
-        @@@     H sync pulse for 3.2us
-        LDR     R0, =HSYNCP
-        STR     R8, [R9, OUTCLR]
-        STR     R0, [R9, OUTSET]
-        MOV     R0, #20
+        @@@     H sync pulse for 3.2us (only VSYNC high)
+        LDR     R1, =HSYNC
+        STR     R1, [R9, OUTCLR]
+        MOV     R0, #48
         BL      delay
-        @@@     H back porch for 2.2us
-        LDR     R0, =PORCH
-        STR     R8, [R9, OUTCLR]
-        STR     R0, [R9, OUTSET]
-        MOV     R0, #13
+        @@@     H back porch for 2.2us (only HSYNC | VSYNC high)
+        STR     R1, [R9, OUTTGL]
+        MOV     R0, #29
         BL      delay
         @@@     return
         POP     {PC}
