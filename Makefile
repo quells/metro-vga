@@ -1,17 +1,16 @@
-EXE = metro-vga
-BASE = 0x4000
-TARGET = /media/$(shell whoami)/METROM4BOOT/
+TAG=metro-vga
 
-build/%.bin: src/*.rs Cargo.toml
-	mkdir -p $(@D)
-	cargo objcopy --bin $(EXE) --release -- -O binary $@
+.PHONY: container
+container:
+	docker build -t $(TAG) .
 
-build/%.uf2: build/%.bin
-	uf2conv $< --base $(BASE) --output $@
+.PHONY: build
+build: container
+	@mkdir -p build
+	docker run --rm \
+	--mount type=bind,source="$(shell pwd)/build",target=/opt/build \
+	--mount type=bind,source="$(shell pwd)/src",target=/opt/src \
+	metro-vga
 
-install: build/$(EXE).uf2
-	cp build/$(EXE).uf2 $(TARGET)
-
-.PHONY: clean
 clean:
-	-rm -rf build
+	-rm build/*
